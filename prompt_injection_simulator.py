@@ -200,9 +200,28 @@ You are a helpful assistant with strict security rules:
     
     def save_report(self, filename: str = "attack_report.md"):
         """Save the test report to a file"""
-        with open(filename, 'w') as f:
-            f.write(self.generate_report())
-        print(f"📄 Report saved to {filename}")
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(self.generate_report())
+            print(f"📄 Report saved to {filename}")
+        except UnicodeEncodeError:
+            # Fallback: save without emojis if Unicode fails
+            report_content = self.generate_report()
+            # Replace problematic Unicode characters
+            report_content = report_content.replace('✅', '[SUCCESS]')
+            report_content = report_content.replace('❌', '[FAILED]')
+            report_content = report_content.replace('⛔', '[BLOCKED]')
+            report_content = report_content.replace('⚠️', '[WARNING]')
+            report_content = report_content.replace('📄', '')
+            report_content = report_content.replace('🛡️', '')
+            
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(report_content)
+            print(f"Report saved to {filename} (Unicode characters replaced for compatibility)")
+        except Exception as e:
+            print(f"Error saving report: {e}")
+            print("Displaying report in console instead:")
+            print(self.generate_report())
 
 def main():
     """Main function to run the simulator"""
